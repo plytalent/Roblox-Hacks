@@ -36,7 +36,7 @@ game:GetService("Players").PlayerAdded:Connect(chatbind)
 _G.Chat_log = not _G.Chat_log
 local last_updatefire = tick()
 game:GetService("RunService").Stepped:Connect(function()
-    if (tick() - last_updatefire) < 1/10 then
+    if (tick() - last_updatefire) > 1/10 then
         last_updatefire = tick()
         UpdateSignal:Fire()
     end
