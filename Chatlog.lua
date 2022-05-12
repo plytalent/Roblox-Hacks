@@ -13,9 +13,9 @@ local function IsStringEmpty(String)
 end
 
 function chatbind(player)
-    local firstname = player:GetAttribute('FirstName') or ""
-    local lastname = player:GetAttribute('LastName') or ""
     player.Chatted:Connect(function(msg)
+	    local firstname = player:GetAttribute('FirstName') or ""
+    	local lastname = player:GetAttribute('LastName') or ""
         lines[#lines+1] = string.format("%s %s (%s):%s", firstname, lastname, player.Name, msg)
         UpdateSignal:Fire()
         if #lines >= 17 then
