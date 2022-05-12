@@ -80,8 +80,8 @@ Text_Drawing.Transparency = 0
 Text_Drawing.Visible = false
 Square_Drawing.Transparency = 0
 Square_Drawing.Visible = false
-Square_Drawing2.Transparency = 0
-Square_Drawing2.Visible = false
+Square2_Drawing.Transparency = 0
+Square2_Drawing.Visible = false
 
 Text_Drawing:Remove()
 Square_Drawing:Remove()
