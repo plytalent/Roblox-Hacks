@@ -1,12 +1,11 @@
 local Config = {
 	WindowName = "RubyTheSilent Hub [Universal]",
 	Color = Color3.fromRGB(255,128,64),
-	Keybind = Enum.KeyCode.RightShift
 }
+
 if game.PlaceId == 8619263259 then
 	Config.WindowName = "RubyTheSilent Hub [Critical Legends]"
 end
-
 
 local Label_config = {
 	ManaSoul = "Mana Soul",
@@ -15,7 +14,15 @@ local Label_config = {
 	Movement = "Movement",
 	Player = "Player"
 }
-
+local variables = {
+	manarunspeed = 2.75,
+	manaflyspeed = 2.75,
+	camspeed = 2.75,
+	aladin_carpet_offset = 5,
+}
+local Keybinds = {
+	OpenUIKeyBind = Enum.KeyCode.LeftAlt.Name
+}
 if isfile then
 	if isfile("ManaStuff UI Labels.properties") then
 		local content = readfile("ManaStuff UI Labels.properties")
@@ -28,14 +35,54 @@ if isfile then
 		end
 	end
 end
+if isfile then
+	if isfile("ManaStuff UI Variables.properties") then
+		local content = readfile("ManaStuff UI Variables.properties")
+		if content ~= "" then
+			local lines = content:split("\n")
+			for i=1,#lines do
+				if lines[i] then
+					local index_and_typeandvalue = lines[i]:split("=")
+					local typeandvalue = index_and_typeandvalue[2]:split(":")
+					local tofuncs = {
+						["string"] = tostring,
+						["number"] = tonumber
+					}
+					variables[index_and_typeandvalue[1]] = tofuncs[typeandvalue[1]](typeandvalue[2])
+				end
+			end
+		end
+	end
+end
+if isfile then
+	if isfile("ManaStuff UI Keybinds.properties") then
+		local content = readfile("ManaStuff UI Keybinds.properties")
+		if content ~= "" then
+			local lines = content:split("\n")
+			for i=1,#lines do
+				local index_and_value = lines[i]:split("=")
+				Keybinds[index_and_value[1]] = index_and_value[2]
+			end
+		end
+	end
+end
 
 local Playerobj = game:GetService("Players").LocalPlayer
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local vu = game:GetService("VirtualUser")
+
 local cf_character_update = CFrame.new()
-local manarunspeed = 2.75
-local manaflyspeed = 2.75
+local currentcam_rotation_x, currentcam_rotation_y = 0, 0
+local Part
+local camfc
+function create_aladin_carpet()
+	Part = Instance.new("Part",workspace)
+	Part.Name = "Floatly"
+	Part.Position = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position-Vector3.new(0,game:GetService("Players").LocalPlayer.Character["Left Leg"].Size.Y+2,0)
+	Part.Size = Vector3.new(10,0,10)
+	Part.Anchored = true
+end
 --==================================[[AFHB]]==================================--
 local frame = 1 / 60
 local allowframeloss = false
@@ -143,12 +190,14 @@ end
 local ArtificialHB = AFHB_Module()
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BracketV3.lua"))()
+
 local Window = Library:CreateWindow(Config, game:GetService("CoreGui"))
 Window:Toggle(false)
 
 local Tab1 = Window:CreateTab("Main")
 local CEV = Window:CreateTab("Artificial Heartbeat Settings")
 local Tab2 = Window:CreateTab("UI Settings")
+
 local movement = Tab1:CreateSection(Label_config.Movement)
 local player = Tab1:CreateSection(Label_config.Player)
 local Event = CEV:CreateSection("Artificial Heartbeat")
@@ -181,31 +230,53 @@ Playerobj.Idled:Connect(function()
 		printconsole("Mouse Released!")
 	end
 end)
+local observe = player:CreateToggle("Observe", false, function(State)
+	camfc = workspace.CurrentCamera.CFrame
+	currentcam_rotation_x, currentcam_rotation_y = 0, 0
+	local PlayerModule = require(Playerobj.PlayerScripts:WaitForChild("PlayerModule"))
+	local Controls = PlayerModule:GetControls()
+	if not State then
+		Controls:Enable()
+	else
+		Controls:Disable()
+	end
+end)
+local aladin_carpet = player:CreateToggle("Aladin Carpet", false, function()end)
 ManaSoul:CreateKeybind(Enum.KeyCode.P.Name)
 ManaFly:CreateKeybind(Enum.KeyCode.K.Name)
 ManaRun:CreateKeybind(Enum.KeyCode.M.Name)
 local Toggle4 = UI_1:CreateToggle("UI Toggle", nil, function(State)
 	Window:Toggle(State)
 end)
+
 local Toggle7 = UI_1:CreateToggle("TASTE THE RAINBOW", nil, function(State)
-	if not State then
+	if State then
 		Window:ChangeColor(Config.Color)
 	end
 end)
-Toggle4:CreateKeybind(Config.Keybind.Name, function(Key)
-	Config.Keybind = Enum.KeyCode[Key]
+Toggle4:CreateKeybind(Keybinds.OpenUIKeyBind, function(Key)
+	Keybinds.OpenUIKeyBind = Enum.KeyCode[Key].Name
 end)
-local Slider1 = movement:CreateSlider(Label_config.ManaRun.." Multiplier", 0, 300, 150, false, function(x)
-	manarunspeed = (x/100)
+local Slider1 = movement:CreateSlider(Label_config.ManaRun.." Multiplier", 0, 300, variables.manarunspeed*100, false, function(x)
+	variables.manarunspeed = (x/100)
 	if x == 0 then
-		manarunspeed = 0
+		variables.manarunspeed = 0
 	end
 end)
-local Slider2 = movement:CreateSlider(Label_config.ManaFly.." Multiplier", 0, 300, 150, false, function(x)
-	manaflyspeed = (x/100)
+local Slider2 = movement:CreateSlider(Label_config.ManaFly.." Multiplier", 0, 300, variables.manaflyspeed*100, false, function(x)
+	variables.manaflyspeed = (x/100)
 	if x == 0 then
-		manaflyspeed = 0
+		variables.manaflyspeed = 0
 	end
+end)
+local Slider2 = player:CreateSlider("Observe Speed Multiplier", 0, 300, variables.camspeed*100, false, function(x)
+	variables.camspeed = (x/100)
+	if x == 0 then
+		variables.camspeed = 0
+	end
+end)
+local Slider2 = player:CreateSlider("Aladin Carpet Offset", -10, 10, variables.aladin_carpet_offset, false, function(x)
+	variables.aladin_carpet_offset = x
 end)
 local Colorpicker3 = UI_1:CreateColorpicker("UI Color", function(Color)
 	Config.Color = Color
@@ -249,10 +320,22 @@ end)
 local Slider3 = UI_2:CreateSlider("Transparency",0,1,0,false, function(Value)
 	Window:SetBackgroundTransparency(Value)
 end)
-local Slider4 = UI_2:CreateSlider("Tile Scale",0,1,0.5,false, function(Value)
+local Slider4 = UI_2:CreateSlider("Tile Scale",0,1,1,false, function(Value)
 	Window:SetTileScale(Value)
 end)
-
+local SaveButton = UI_2:CreateButton("Save Variables Values", function()
+	if writefile then
+		local new_file_content = ""
+		local new_keybind_file_content = ""
+		for index, value in pairs(variables) do
+			new_file_content = string.format("%s\n%s=%s:%s",new_file_content,index,typeof(value),tostring(value))
+		end
+		for index, value in pairs(Keybinds) do
+			new_keybind_file_content = string.format("%s\n%s=%s",new_keybind_file_content,index,tostring(value))
+		end
+		writefile("ManaStuff UI Variables.properties",new_file_content)
+	end
+end)
 RunService.Stepped:Connect(function()
 	if ManaSoul:GetState() then
 		local Character = Playerobj.Character
@@ -263,6 +346,44 @@ RunService.Stepped:Connect(function()
 		    	end
 		    end
         end
+	end
+end)
+
+RunService:BindToRenderStep("Update Camera",Enum.RenderPriority.Camera.Value+1,function()
+	if observe:GetState() then
+		local leftorright,upordown,backorforward = 0,0,0
+		if UIS:IsKeyDown(Enum.KeyCode.S) then
+			backorforward = backorforward + variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.W) then
+			backorforward = backorforward - variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.D) then
+			leftorright = leftorright + variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.A) then
+			leftorright = leftorright - variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.Q) then
+			upordown = upordown + variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.E) then
+			upordown = upordown - variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.R) then
+			currentcam_rotation_x = currentcam_rotation_x + variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.T) then
+			currentcam_rotation_x = currentcam_rotation_x - variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.F) then
+			currentcam_rotation_y = currentcam_rotation_y + variables.camspeed
+		end
+		if UIS:IsKeyDown(Enum.KeyCode.G) then
+			currentcam_rotation_y = currentcam_rotation_y - variables.camspeed
+		end
+		camfc = CFrame.new(camfc * CFrame.new(leftorright,upordown,backorforward).Position) * CFrame.Angles(0,math.rad(currentcam_rotation_y),0) * CFrame.Angles(math.rad(currentcam_rotation_x),0,0)
+		workspace.CurrentCamera.CFrame = camfc
 	end
 end)
 
@@ -301,16 +422,16 @@ ArtificialHB.Event:Connect(function(d)
 			if Character:FindFirstChild("HumanoidRootPart") then
 				local leftorright,backorforward = 0,0
 				if UIS:IsKeyDown(Enum.KeyCode.S) then
-					backorforward = backorforward + manaflyspeed
+					backorforward = backorforward + variables.manaflyspeed
 				end
 				if UIS:IsKeyDown(Enum.KeyCode.W) then
-					backorforward = backorforward - manaflyspeed
+					backorforward = backorforward - variables.manaflyspeed
 				end
 				if UIS:IsKeyDown(Enum.KeyCode.D) then
-					leftorright = leftorright + manaflyspeed
+					leftorright = leftorright + variables.manaflyspeed
 				end
 				if UIS:IsKeyDown(Enum.KeyCode.A) then
-					leftorright = leftorright - manaflyspeed
+					leftorright = leftorright - variables.manaflyspeed
 				end
 				local targetCF = workspace.CurrentCamera.CFrame
 				local rx,ry,_ = targetCF:ToOrientation()
@@ -328,23 +449,38 @@ ArtificialHB.Event:Connect(function(d)
 		if Character then
 			local leftorright,backorforward = 0,0
         	if UIS:IsKeyDown(Enum.KeyCode.S) then
-        	    backorforward = backorforward + manarunspeed
+        	    backorforward = backorforward + variables.manarunspeed
         	end
         	if UIS:IsKeyDown(Enum.KeyCode.W) then
-        	    backorforward = backorforward - manarunspeed
+        	    backorforward = backorforward - variables.manarunspeed
         	end
         	if UIS:IsKeyDown(Enum.KeyCode.D) then
-        	    leftorright = leftorright + manarunspeed
+        	    leftorright = leftorright + variables.manarunspeed
         	end
         	if UIS:IsKeyDown(Enum.KeyCode.A) then
-        	    leftorright = leftorright - manarunspeed
+        	    leftorright = leftorright - variables.manarunspeed
         	end
 			local targetCF = workspace.CurrentCamera.CFrame
 			local _, ry, _ = targetCF:ToOrientation()
 			if Character.PrimaryPart then
+				if aladin_carpet:GetState() then
+					Part.CFrame = (CFrame.new(Character:GetPrimaryPartCFrame().Position)*CFrame.Angles(0,ry,0)) * CFrame.new(leftorright,0,backorforward)
+				end
 				Character:SetPrimaryPartCFrame((CFrame.new(Character:GetPrimaryPartCFrame().Position)*CFrame.Angles(0,ry,0)) * CFrame.new(leftorright,0,backorforward))
 			end
 		end
+	end
+	if aladin_carpet:GetState() then
+		if not Part then
+			create_aladin_carpet()
+		end
+		if not Part.Parent then
+			create_aladin_carpet()
+		end
+		Part.Name = "Floatly"
+		Part.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame*CFrame.new(0,-variables.aladin_carpet_offset,0)
+		Part.Size = Vector3.new(10,0,10)
+		Part.Anchored = true
 	end
 end)
 
@@ -359,7 +495,15 @@ end
 if game.PlaceId == 8619263259 then
 	local target = nil
 	local targets = {}
-	local safe_offset_cf = CFrame.new(0, 85, 0)
+	if not variables.safe_offset_cf_x then
+		variables.safe_offset_cf_x = 0
+	end
+	if not variables.safe_offset_cf_y then
+		variables.safe_offset_cf_y = 85
+	end
+	if not variables.safe_offset_cf_z then
+		variables.safe_offset_cf_z = 0
+	end
 	for _,zone in pairs(workspace.Enemies:GetChildren()) do
 		for _, enemy in pairs(zone:GetChildren()) do
 			if enemy:IsA("Model") and enemy:FindFirstChild("Model") then
@@ -373,8 +517,14 @@ if game.PlaceId == 8619263259 then
 	local Critical_Legends_Tab = Window:CreateTab("Critical Legends")
 	local AutoFarmSection = Critical_Legends_Tab:CreateSection("Auto Farm")
 	local TargetHealth = AutoFarmSection:CreateLabel("Target Health: 0/0")
-	local Slider3 = UI_2:CreateSlider("Offset",0,100,0,false, function(Value)
-		safe_offset_cf = CFrame.new(0, Value, 0)
+	local Slider6 = AutoFarmSection:CreateSlider("OffsetX", -150, 150, variables.safe_offset_cf_x, false, function(Value)
+		variables.safe_offset_cf_x = Value
+	end)
+	local Slider7 = AutoFarmSection:CreateSlider("OffsetY", -150, 150, variables.safe_offset_cf_y, false, function(Value)
+		variables.safe_offset_cf_y = Value
+	end)
+	local Slider8 = AutoFarmSection:CreateSlider("OffsetZ", -150, 150, variables.safe_offset_cf_z, false, function(Value)
+		variables.safe_offset_cf_z = Value
 	end)
 	local AutoFarm_Toggle = AutoFarmSection:CreateToggle("AutoFarm", false,function()end)
 	local AutoOrb_Toggle = AutoFarmSection:CreateToggle("AutoOrb", false,function()end)
@@ -427,9 +577,11 @@ if game.PlaceId == 8619263259 then
 								TargetHealth:UpdateText(string.format("Target Health: %.2f/%.2f", CBF.Owner.Value.Health.Value, CBF.Owner.Value.MaxHealth.Value))
 							end
 						end
+					else
+						TargetHealth:UpdateText(string.format("Target Health: 0/0"))
 					end
 					if CBF:FindFirstChild(Playerobj.Name) then
-						Playerobj.Character.HumanoidRootPart.CFrame = target.EnemyLocation.CFrame * safe_offset_cf
+						Playerobj.Character.HumanoidRootPart.CFrame = target.EnemyLocation.CFrame * CFrame.new(variables.safe_offset_cf_x, variables.safe_offset_cf_y, variables.safe_offset_cf_z)
 						Playerobj.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
 						Playerobj.Character.HumanoidRootPart.Anchored = false
 					else
