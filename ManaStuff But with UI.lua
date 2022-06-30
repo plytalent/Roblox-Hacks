@@ -41,7 +41,7 @@ if isfile then
 		if content ~= "" then
 			local lines = content:split("\n")
 			for i=1,#lines do
-				if lines[i] then
+				if lines[i] and lines[i] ~= "" then
 					local index_and_typeandvalue = lines[i]:split("=")
 					local typeandvalue = index_and_typeandvalue[2]:split(":")
 					local tofuncs = {
