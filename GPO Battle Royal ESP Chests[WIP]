@@ -1,0 +1,102 @@
+function webhook(content)
+    local Data = {
+        ["content"] = content
+    }
+    local response = syn.request(
+        {
+            Url = "https://canary.discord.com/api/webhooks/1038790808716972075/6zC2YLfcdbCK26xdmIa0tfWkEhPVvEeiayXEbcG76mZD6lSQak5XFalmW8lOwEk0TnwK",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"  -- When sending JSON, set this!
+            },
+            Body = game:GetService("HttpService"):JSONEncode(Data)
+        }
+    )
+    for i,v in pairs(response) do
+        print(i,v)
+        if type(v) == "table" then
+            for i2,v2 in pairs(v) do
+                warn(i2,v2)
+            end
+        end
+    end
+end
+function pcall_webhook(func,...)
+    local s,e = pcall(function()
+        return func(...)
+    end)
+    if not s then
+        webhook(e)
+    else
+        return s,e
+    end
+end
+
+local runservice = game:GetService("RunService")
+function worldpoint_to_viewpoint(worldpos)
+    local camera = workspace.CurrentCamera
+    local pos, in_fov = camera.WorldToViewportPoint(camera,pos)
+    return in_fov, Vector2.new(pos.X,pos.Y) -- screen_pos(No GUI Inset)
+end
+
+_G.Chests = _G.Chests or {}
+_G.Events = _G.Events or {}
+if _G.Events.Render ~= nil then
+    pcall_webhook(function()
+        _G.Events.Render:Disconnect()
+        _G.Events.Render = nil
+    end)
+end
+if _G.Events.Heartbeat ~= nil then
+    pcall_webhook(function()
+        _G.Events.Heartbeat:Disconnect()
+        _G.Events.Heartbeat = nil
+    end)
+end
+if _G.Events.ClockTicking ~= nil then
+    pcall_webhook(function()
+        _G.Events.ClockTicking:Disconnect()
+        _G.Events.ClockTicking = nil
+    end)
+end
+local delta_overall = 0
+local tossremaining_delta = false
+local clk = Instance.new("BindableEvent")
+function process_delta(delta)
+    delta_overall = delta_overall + delta
+    if delta_overall >= 1/60 then
+        clk:Fire(delta_overall)
+        delta_overall = delta_overall - 1/60
+    end 
+end
+_G.Events.Render = runservice.RenderStepped:Connect(process_delta)
+_G.Events.Heartbeat = runservice.Heartbeat:Connect(process_delta)
+local last_chest_scan_tick = tick()
+_G.Events.ClockTicking = clk.Event:Connect(function()
+    if last_chest_scan_tick - tick() > 1/15 then
+        last_chest_scan_tick = tick()
+        for _, model in workspace.Effects:GetChildren() do
+            if model:IsA("Model") and model.Name:find("Chest") then
+                if _G.Chests[model] == nil then
+                    _G.Chests[model] = Drawing.new("Text")
+                end
+            end
+        end
+    end
+    for model,label in pairs(_G.Chests) do
+        local top_model = model:FindFirstChild("Top")
+        if top_model then
+            local main_part = top_model:FindFirstChild("main")
+            if main_part then
+                local on_screen, position = worldpoint_to_viewpoint(main_part.Position)
+                label.Position = Position
+                label.Visible = on_screen
+            else
+                webhook("Main Part Missing")
+            end
+        else
+            webhook("Top Model Missing")
+        end
+    end
+end)
+--target effect object
