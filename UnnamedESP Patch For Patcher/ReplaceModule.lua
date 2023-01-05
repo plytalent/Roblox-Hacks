@@ -1,4 +1,4 @@
-    modules[5208655184] = {
+    Modules[5208655184] = {
         CustomPlayerTag = function(Player)
             if game.PlaceVersion < 457 then return '' end
             local Name = '';
@@ -330,7 +330,7 @@
             return Name;
         end;
     };	
-    modules[6032399813] = { -- Deepwoken [Etrean]
+    Modules[6032399813] = { -- Deepwoken [Etrean]
 		CustomPlayerTag = function(Player)
 			local Name = '';
             CharacterName = Player:GetAttribute'CharacterName'; -- could use leaderstats but lazy
@@ -386,7 +386,7 @@
 			return Name;
 		end;
 	};
-    modules[5735553160] = { -- Deepwoken [Depths]
+    Modules[5735553160] = { -- Deepwoken [Depths]
 	    CustomPlayerTag = function(Player)
 			local Name = '';
 			CharacterName = Player:GetAttribute'CharacterName'; -- could use leaderstats but lazy
