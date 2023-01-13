@@ -1525,6 +1525,7 @@ function loadmodules(id)
 				variables.Text_Size = x
 			end)
 			local base_zindex = 1000
+			local lock_create_label = {}
 			local last_clear = tick()
 			RunService:BindToRenderStep("ESP(Mob) Update",Enum.RenderPriority.Character.Value+1,function()
 				local start_overall = tick()
@@ -1577,12 +1578,14 @@ function loadmodules(id)
 						for index = 1, #live_child do
 							local character = live_child[index]
 							if character then
-								if character.Name:split("")[1] == "." and already_updated[character] == nil then
+								if character.Name:split("")[1] == "." and already_updated[character] == nil and lock_create_label[character] == false then
+									lock_create_label[character] = true
 									local data = {
 										NameTag = synTextLabel(),
 										DistantTag = synTextLabel()
 									}
 									_G.Mob_Data[character] = data
+									lock_create_label[character] = false
 									local part = FindFirstChild_func(character, "HumanoidRootPart") or FindFirstChild_func(character, "Torso") or FindFirstChildOfClass_f(character, "Part") or FindFirstChildOfClass_f(character, "MeshPart")
 									local humanoid = FindFirstChildOfClass_f(character, "Humanoid")
 									if part then
