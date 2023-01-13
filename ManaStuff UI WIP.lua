@@ -1578,7 +1578,7 @@ function loadmodules(id)
 						for index = 1, #live_child do
 							local character = live_child[index]
 							if character then
-								if character.Name:split("")[1] == "." and already_updated[character] == nil and lock_create_label[character] == false then
+								if character.Name:split("")[1] == "." and already_updated[character] == nil and not lock_create_label[character] then
 									lock_create_label[character] = true
 									local data = {
 										NameTag = synTextLabel(),
