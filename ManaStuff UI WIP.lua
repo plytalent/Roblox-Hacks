@@ -901,40 +901,109 @@ function create_aladin_carpet()
 end
 
 --==================================[[AFHB]]==================================--
-local frame = 1 / 60
-local allowframeloss = false
-local tossremainder = false
-local AFHB_Module = function()
-	local ArtificialHB = Instance.new("BindableEvent")
-	local tf = 0	
-	local lastframe = tick()
-	local lasttick = tick()
-	RunService.Heartbeat:Connect(function()
-	    local rounddelta = tick() - lasttick
-	    lasttick = tick()
-		tf = tf + rounddelta
-		if tf >= frame then
-		    local delta = tick() - lastframe
-			if allowframeloss then
-				ArtificialHB:Fire(delta)
-				lastframe = tick()
-			else
-				for _ = 1, math.floor(tf / frame) do
-				    local delta = tick() - lastframe
-					ArtificialHB:Fire(delta)
-					lastframe = tick()
-				end
-				lastframe = tick()
-			end
-			if tossremainder then
-				tf = 0
-			else
-				tf = tf - frame * math.floor(tf / frame)
-			end
-		end
-	end)
-	ArtificialHB.Name = "ArtificialHeartbeat"
-	return ArtificialHB
+local Artificial_Event_Module = function()
+    
+    local ArtificialEV = {
+        target_frame = 60,
+        allow_frame_loss = false,
+        toss_remaining = false,
+        Event = game:GetService("RunService").Stepped,
+        Internal_Events = {}
+    }
+    
+    function ArtificialEV:Bind(Name,func)
+       rawget(ArtificialEV,"Internal_Events")[Name] = func
+    end
+
+    function ArtificialEV:Unbind(Name)
+       rawget(ArtificialEV,"Internal_Events")[Name] = nil
+    end
+
+    function ArtificialEV:Wait()
+       local current_state = rawget(ArtificialEV, "Internal_Wait_FlipFlop")
+       local wait_skip = 0
+       local max_skip = 5
+
+       while current_state == rawget(ArtificialEV, "Internal_Wait_FlipFlop") do
+           if wait_skip > max_skip then
+               wait_skip = 0
+               wait()
+           else
+               wait_skip = wait_skip + 1
+           end
+       end
+
+       return rawget(ArtificialEV,"Internal_Wait_Delta")
+    end
+
+    local tf = 0
+    local lastframe = tick()
+    local math_floor = math.floor
+	local string_format = string.format
+
+    local ArtificialEV_mt = {
+        __index = function(t,index)
+            if index:find("Internal") then
+                return nil
+            end
+            return rawget(t, index)
+        end,
+        __newindex = function(t,index,value)
+            if rawget(t,index) ~= nil and index:find("Internal") == nil and type(rawget(t,index)) ~= "function" and type(rawget(t,index)) == type(value) then
+                rawset(t, index, value)
+            end
+        end
+    }
+    function FireAll(delta)
+        coroutine.wrap(function()
+            local name_and_funcs = rawget(ArtificialEV,"Internal_Events")
+            rawset(ArtificialEV, "Internal_Wait_FlipFlop", not rawget(ArtificialEV, "Internal_Wait_FlipFlop"))
+            rawset(ArtificialEV, "Internal_Wait_Delta", delta)
+            for name, func in pairs(name_and_funcs) do
+                local additional_delta = tick()
+                local s, e = pcall(func,delta)
+                delta = delta + (tick() - additional_delta)
+                if not s then
+                    local msg = string_format("[Artificial Event] Error in Function With binding Name '%s':\n%s",name ,e)
+                    if printconsole then
+                        printconsole(msg)
+                    else
+                        print(msg)
+                    end
+                end
+            end
+        end)()
+    end
+    coroutine.wrap(function()
+        while true do
+            local delta = tick()
+            ArtificialEV.Event:Wait()
+            delta = tick() - delta
+            local current_target_frame = 1 / ArtificialEV.target_frame
+            tf = tf + delta
+            if tf >= current_target_frame then
+                local delta = tick() - lastframe
+                if ArtificialEV.allow_frame_loss then
+                    FireAll(delta)
+                    lastframe = tick()
+                else
+                    for _ = 1, math_floor(tf / current_target_frame) do
+                        local delta = tick() - lastframe
+                        FireAll(delta)
+                        lastframe = tick()
+                        tf = tf + delta
+                    end
+                    lastframe = tick()
+                end
+                if ArtificialEV.toss_remaining then
+                    tf = 0
+                else
+                    tf = tf - current_target_frame * math_floor(tf / current_target_frame)
+                end
+            end
+        end
+    end)()
+    return setmetatable(ArtificialEV,ArtificialEV_mt)
 end
 --==================================[[AFHB]]==================================--
 
@@ -956,7 +1025,7 @@ function fill_decimal(string_decimal)
 	return "00.00"
 end
 
-local ArtificialHB = AFHB_Module()
+local Artificial = Artificial_Event_Module()
 
 local watch = {}
 
@@ -973,7 +1042,7 @@ local Window = LibraryUI:CreateWindow(Config, game:GetService("CoreGui"))
 Window:Toggle(false)
 
 local Tab1 = Window:CreateTab("Main")
-local CEV = Window:CreateTab("Artificial Heartbeat Settings")
+local CEV = Window:CreateTab("Artificial Event Settings")
 local ETVFO = Window:CreateTab("Execution Time View For Optimization")
 local Tab2 = Window:CreateTab("UI Settings")
 
@@ -1008,7 +1077,7 @@ Playerobj.Idled:Connect(function()
 		local current_tick = 0
     	while current_tick >= 1 do
 			current_tick = tick() - starttick
-			ArtificialHB.Event:Wait()
+			Artificial:Wait()
 		end
     	vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 		printconsole("Mouse Released!")
@@ -1102,16 +1171,19 @@ end)
 local Warning = Event:CreateLabel("WARN: DO NOT ENABLE Toss Remainder")
 local Label1 = Event:CreateLabel("Current Event Frame")
 local Label2 = Event:CreateLabel("Current Event Frame Time: -NaN(%ind) ms")
-local Slider5 = Event:CreateSlider("Event Frame Time",1,120,60,false, function(Value)
-	frame = 1/Value
-	local stringtime = fill_decimal(string.format("%.2f",(frame*1000)))
+local Slider5 = Event:CreateSlider("Event Target Frame Time",1,60,60,true, function(Value)
+	Artificial.target_frame = Value
+	local stringtime = fill_decimal(string.format("%.2f",((1/Artificial.target_frame)*1000)))
 	Label2:UpdateText(string.format("Current Target Event Frame Time: %s ms",stringtime))
 end)
+local Options_Events = Event:CreateDropdown("Event", {"Stepped","RenderStepped","Heartbeat"}, function(Name)
+	Artificial.Event = game:GetService("RunService")[Name]
+end,"Stepped")
 local Toggle5 = Event:CreateToggle("Allow Frame Lost", false, function(State)
-	allowframeloss = State
+	Artificial.allow_frame_loss = State
 end)
 local Toggle6 = Event:CreateToggle("Toss Remaind Frame Time", false, function(State)
-	tossremainder = State
+	Artificial.toss_remaining = State
 end)
 local Colorpicker4 = UI_2:CreateColorpicker("Color", function(Color)
 	Window:SetBackgroundColor(Color)
@@ -1215,7 +1287,7 @@ RunService:BindToRenderStep("Update UI",1,function()
 	end
 	watch["UI Update"] = tick() - start
 end)
-ArtificialHB.Event:Connect(function(d)
+Artificial:Bind("Fly",function(d)
 	local start_overall = tick()
 	Label1:UpdateText(string.format("Frame:%s",fill_decimal(string.format("%.2f",1/d))))
 	local Character = Playerobj.Character
@@ -1245,7 +1317,8 @@ ArtificialHB.Event:Connect(function(d)
 					local rz, rx, ry = workspace.CurrentCamera.CFrame:ToOrientation()
 					targetCF = (CFrame.new(cf_character_update.Position)*CFrame.Angles(0,rx,0))*CFrame.Angles(rz,0,0)
             		cf_character_update = (targetCF*CFrame.new(leftorright,0,backorforward))
-					Character:SetPrimaryPartCFrame(cf_character_update)
+					local rz_ch, rx_ch, ry_ch = Character:GetPrimaryPartCFrame():ToOrientation() --Z X Y ToOrientation
+					Character:SetPrimaryPartCFrame(CFrame.new(cf_character_update.Position) * CFrame.Angles(rz_ch, rx_ch, ry_ch))
 					Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
 				end
 			end
@@ -1276,7 +1349,8 @@ ArtificialHB.Event:Connect(function(d)
 						Part.CFrame = (CFrame.new(Character:GetPrimaryPartCFrame().Position)*CFrame.Angles(0,rx,0)) * CFrame.new(leftorright,0,backorforward)
 					end
 				end
-				Character:SetPrimaryPartCFrame((CFrame.new(Character:GetPrimaryPartCFrame().Position)*CFrame.Angles(0,rx,0)) * CFrame.new(leftorright,0,backorforward))
+				local rz_ch, rx_ch, ry_ch = Character:GetPrimaryPartCFrame():ToOrientation() --Z X Y ToOrientation
+				Character:SetPrimaryPartCFrame(CFrame.new(((CFrame.new(Character:GetPrimaryPartCFrame().Position)*CFrame.Angles(0,rx,0)) * CFrame.new(leftorright,0,backorforward)).Position) * CFrame.Angles(rz_ch, rx_ch, ry_ch))
 			end
 		end
 	end
@@ -1365,7 +1439,7 @@ function loadmodules(id)
 					end
 				end
 			end)
-			ArtificialHB.Event:Connect(function()
+			Artificial:Bind("AutoOrb",function()
 				if AutoOrb_Toggle:GetState() or AutoFarm_Toggle:GetState() then
 					if workspace:FindFirstChild("CombatFolder") then
 						if workspace.CombatFolder:FindFirstChild(Playerobj.Name) then
@@ -1470,7 +1544,7 @@ function loadmodules(id)
 			local Mob_Section = Deepwoken_Tab:CreateSection("Mob ESP")
 			local NoFall_Section = Deepwoken_Tab:CreateSection("No Fall")
 			if typeof(hookmetamethod) == "function" and typeof(newcclosure) == "function" and typeof(checkcaller) == "function" then
-				local NoFall_Toggle = NoFall_Section:CreateToggle("Toggle", true, function()end)
+				local NoFall_Toggle = NoFall_Section:CreateToggle("Toggle", false, function()end)
 				local original
 				original = hookmetamethod(game, "__namecall", newcclosure(function(remote, ...)
 					if typeof(remote) == "Instance" and not checkcaller() then
@@ -1578,7 +1652,7 @@ function loadmodules(id)
 						for index = 1, #live_child do
 							local character = live_child[index]
 							if character then
-								if character.Name:split("")[1] == "." and already_updated[character] == nil and not lock_create_label[character] then
+								if character.Name:split("")[1] == "." and already_updated[character] == nil and lock_create_label[character] == false then
 									lock_create_label[character] = true
 									local data = {
 										NameTag = synTextLabel(),
@@ -1674,7 +1748,7 @@ function loadmodules(id)
 end
 loadmodules(game.PlaceId)
 local watcher_labels = {["Watcher"]=ExecutionTimes:CreateLabel("%s: %.2f")}
-ArtificialHB.Event:Connect(function()
+Artificial:Bind("Watcher",function()
 	local start_overall = tick()
 	for watchname, executiontime in pairs(watch) do
 		local label = watcher_labels[watchname]
@@ -1690,6 +1764,5 @@ end)
 Colorpicker3:UpdateColor(Config.Color)
 Dropdown3:SetOption("Abstract")
 Colorpicker4:UpdateColor(Color3.new(1,1,1))
-ArtificialHB:Fire(0)
-ArtificialHB.Event:Wait()
+Artificial:Wait()
 Toggle4:SetState(true)
