@@ -1517,6 +1517,20 @@ function loadmodules(id)
 			local wtvp = camera.WorldToViewportPoint
 	
 			local NewDraw = Drawing.new
+
+			local base_zindex = -1000
+			local lock_create_label = {}
+			local last_clear = tick()
+			
+			function m1()
+				mouse1press()
+				Artificial:Wait()
+				mouse1release()
+			end
+			
+			local startpos = player.Character.HumanoidRootPart.Position
+			local lastpress = tick()
+			local pressed = false
 	
 			getgenv = getgenv and getgenv or function() if not _G.Mob_Data.getgenv then _G.Mob_Data.getgenv = {} end return _G.Mob_Data.getgenv end
 			function synTextLabel()
@@ -1542,6 +1556,7 @@ function loadmodules(id)
 			end
 	
 			local Mob_Section = Deepwoken_Tab:CreateSection("Mob ESP")
+			local Auto_Section = Deepwoken_Tab:CreateSection("Automation")
 			local NoFall_Section = Deepwoken_Tab:CreateSection("No Fall")
 			if typeof(hookmetamethod) == "function" and typeof(newcclosure) == "function" and typeof(checkcaller) == "function" then
 				local NoFall_Toggle = NoFall_Section:CreateToggle("Toggle", true, function()end)
@@ -1581,6 +1596,10 @@ function loadmodules(id)
 			variables.Text_Size = variables.Text_Size or 18
 			
 			local Mob_toggle = Mob_Section:CreateToggle("Toggle Mob ESP", false, function()end)
+			
+			local AutoFish_toggle = Auto_Section:CreateToggle("Toggle Fishing", false, function()
+				startpos = player.Character.HumanoidRootPart.Position
+			end)
 
 			Mob_toggle:CreateKeybind(Keybinds.Mob_Toggle_ESP or "F5", function(Key)
 				Keybinds.Mob_Toggle_ESP = Enum.KeyCode[Key].Name
@@ -1599,9 +1618,61 @@ function loadmodules(id)
 				variables.Text_Size = x
 			end)
 
-			local base_zindex = -1000
-			local lock_create_label = {}
-			local last_clear = tick()
+			Artificial:Bind("Auto-Fishing",function()
+				local start = tick()
+				if iswindowactive() and AutoFish_toggle:GetState() then
+					local character = player.Character
+					if character then
+						local hrp = character:FindFirstChild("HumanoidRootPart")
+						local t = character:FindFirstChild("Torso")
+						if hrp and t then
+							local hrpcf = hrp.CFrame
+							local tcf = t.CFrame
+							local zhrp, xhrp, yhrp = hrpcf:ToOrientation()
+							local zt, xt, yt = tcf:ToOrientation()
+							local dir = Vector3.new(math.floor(math.deg(xhrp-xt)),math.floor(math.deg(yhrp-yt)),math.floor(math.deg(zhrp-zt)))
+							if dir.x == 0 and dir.z <= -15 then
+								lastpress = tick()
+								pressed = false
+								keypress(0x53)   -- s
+								keyrelease(0x41) -- a
+								keyrelease(0x44) -- d
+								m1()
+							--elseif (dir.x <= -25 and dir.x > -330) and dir.z <= -15 then --elseif dir.x >= 25 and dir.z <= -15 then
+							elseif ((dir.x <= -25 and dir.x <= -320) or (dir.x >= 25 and dir.x <= 320)) and dir.z <= -15 then
+								lastpress = tick()
+								pressed = false
+								keyrelease(0x53)
+								keypress(0x41)
+								keyrelease(0x44)
+								m1()
+							--elseif dir.x <= -330 and dir.z <= -15 then --elseif dir.x >= 330 and dir.z <= -15 then
+							elseif ((dir.x <= -25 and dir.x > -320) or (dir.x > 25 and dir.x >= 320)) and dir.z <= -15 then
+								lastpress = tick()
+								pressed = false
+								keyrelease(0x53)
+								keyrelease(0x41)
+								keypress(0x44)
+								m1()
+							elseif dir.x == -1 and dir.y == -1 and (dir.z > -65 and dir.z < -55) then
+								keyrelease(0x53)
+								keyrelease(0x41)
+								keyrelease(0x44)
+								m1()
+							end
+							if tick() - lastpress >= 0.1 and not pressed then
+								pressed = true
+								keyrelease(0x53)
+								keyrelease(0x41)
+								keyrelease(0x44)
+								character.Humanoid:MoveTo(startpos)
+								m1()
+							end
+						end
+					end
+				end
+				watch["DeepWoken[AutoFishing]"] = tick() - start
+			end)
 
 			RunService:BindToRenderStep("ESP(Mob) Update",Enum.RenderPriority.Character.Value+1,function()
 				local start_overall = tick()
