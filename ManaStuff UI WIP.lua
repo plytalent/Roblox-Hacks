@@ -1528,7 +1528,7 @@ function loadmodules(id)
 				mouse1release()
 			end
 			
-			local startpos = player.Character.HumanoidRootPart.Position
+			local startpos =  Vector3.new()
 			local lastpress = tick()
 			local pressed = false
 	
@@ -1598,7 +1598,11 @@ function loadmodules(id)
 			local Mob_toggle = Mob_Section:CreateToggle("Toggle Mob ESP", false, function()end)
 			
 			local AutoFish_toggle = Auto_Section:CreateToggle("Toggle Fishing", false, function()
-				startpos = player.Character.HumanoidRootPart.Position
+				if player.Character ~= nil then
+					if player.Character:FindFirstChild("HumanoidRootPart") then
+						startpos = player.Character.HumanoidRootPart.Position
+					end
+				end
 			end)
 
 			Mob_toggle:CreateKeybind(Keybinds.Mob_Toggle_ESP or "F5", function(Key)
