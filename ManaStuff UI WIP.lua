@@ -1544,7 +1544,7 @@ function loadmodules(id)
 			local Mob_Section = Deepwoken_Tab:CreateSection("Mob ESP")
 			local NoFall_Section = Deepwoken_Tab:CreateSection("No Fall")
 			if typeof(hookmetamethod) == "function" and typeof(newcclosure) == "function" and typeof(checkcaller) == "function" then
-				local NoFall_Toggle = NoFall_Section:CreateToggle("Toggle", false, function()end)
+				local NoFall_Toggle = NoFall_Section:CreateToggle("Toggle", true, function()end)
 				local original
 				original = hookmetamethod(game, "__namecall", newcclosure(function(remote, ...)
 					if typeof(remote) == "Instance" and not checkcaller() then
@@ -1580,7 +1580,7 @@ function loadmodules(id)
 			variables.limit_distant = variables.limit_distant or 6000
 			variables.Text_Size = variables.Text_Size or 18
 			
-			local Mob_toggle = Mob_Section:CreateToggle("Toggle Mob ESP", true, function()end)
+			local Mob_toggle = Mob_Section:CreateToggle("Toggle Mob ESP", false, function()end)
 
 			Mob_toggle:CreateKeybind(Keybinds.Mob_Toggle_ESP or "F5", function(Key)
 				Keybinds.Mob_Toggle_ESP = Enum.KeyCode[Key].Name
@@ -1592,15 +1592,17 @@ function loadmodules(id)
 			local Mob_ColorPick2 = Mob_Section:CreateColorpicker("DistantTag Color", function(Color)
 				variables.Mob_DistantTagColor = Color
 			end)
-			local Mob_Distant_Slider = Mob_Section:CreateSlider("Distant", 0, 25000, variables.limit_distant, false, function(x)
+			local Mob_Distant_Slider = Mob_Section:CreateSlider("Distant", 0, 25000, variables.limit_distant, true, function(x)
 				variables.limit_distant = x
 			end)
-			local Mob_SizeText_Slider = Mob_Section:CreateSlider("Text Size", 10, 24, variables.Text_Size, false, function(x)
+			local Mob_SizeText_Slider = Mob_Section:CreateSlider("Text Size", 10, 24, variables.Text_Size, true, function(x)
 				variables.Text_Size = x
 			end)
-			local base_zindex = 1000
+
+			local base_zindex = -1000
 			local lock_create_label = {}
 			local last_clear = tick()
+
 			RunService:BindToRenderStep("ESP(Mob) Update",Enum.RenderPriority.Character.Value+1,function()
 				local start_overall = tick()
 				local already_updated = {}
@@ -1652,7 +1654,7 @@ function loadmodules(id)
 						for index = 1, #live_child do
 							local character = live_child[index]
 							if character then
-								if character.Name:split("")[1] == "." and already_updated[character] == nil and lock_create_label[character] == false then
+								if character.Name:split("")[1] == "." and already_updated[character] == nil and not lock_create_label[character] and not _G.Mob_Data[character] then
 									lock_create_label[character] = true
 									local data = {
 										NameTag = synTextLabel(),
