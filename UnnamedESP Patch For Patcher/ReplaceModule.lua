@@ -1,4 +1,4 @@
-	[6032399813] = { -- Deepwoken [Etrean]
+	Modules[6032399813] = { -- Deepwoken [Etrean]
 		CustomPlayerTag = function(Player)
 			local Name = '';
             CharacterName = Player:GetAttribute'CharacterName'; -- could use leaderstats but lazy
@@ -23,8 +23,6 @@
 					end
                 end
                 local BackpackChildren = Player.Backpack:GetChildren()
-				local mark_void_walker = false
-				local has_grasp_of_eylis = false
                 for index = 1, #BackpackChildren do
                     local Oath = BackpackChildren[index]
 					if Oath.ClassName == "Folder" then
@@ -41,22 +39,18 @@
 							local OathName = Oath.Name:gsub('Enchant:', '')
 							table.insert(Extra, OathName);
 						elseif Oath.Name:find("Talent:Voidwalker Contract") then
-							mark_void_walker = true
+							table.insert(Extra, "VoidWalker");
 						elseif Oath.Name:find("Talent:Lightweight") then
 							table.insert(Extra, "LW");
                     	end
 					end
                 end
-
-				if mark_void_walker then
-					table.insert(Extra, "VoidWalker");
-				end
                 if #Extra > 0 then Name = Name .. ' [' .. table.concat(Extra, '-') .. ']'; end
             end
 			return Name;
 		end;
 	};
-    [5735553160] = { -- Deepwoken [Depths]
+    Modules[5735553160] = { -- Deepwoken [Depths]
 	    CustomPlayerTag = function(Player)
 			local Name = '';
 			CharacterName = Player:GetAttribute'CharacterName'; -- could use leaderstats but lazy
@@ -83,9 +77,6 @@
 
 				local BackpackChildren = Player.Backpack:GetChildren()
 
-				local mark_void_walker = false
-				local has_grasp_of_eylis = false
-
 				for index = 1, #BackpackChildren do
 					local Oath = BackpackChildren[index]
 					if Oath.ClassName == "Folder" then
@@ -102,15 +93,11 @@
 							local OathName = Oath.Name:gsub('Enchant:', '')
 							table.insert(Extra, OathName);
 						elseif Oath.Name:find("Talent:Voidwalker Contract") then
-							mark_void_walker = true
+							table.insert(Extra, "VoidWalker");
 						elseif Oath.Name:find("Talent:Lightweight") then
 							table.insert(Extra, "LW");
 						end
 					end
-				end
-
-				if mark_void_walker then
-					table.insert(Extra, "VoidWalker");
 				end
 
 				if #Extra > 0 then Name = Name .. ' [' .. table.concat(Extra, '-') .. ']'; end
