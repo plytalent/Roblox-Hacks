@@ -1616,8 +1616,10 @@ function loadmodules()
             end)
         end)
         if not s then
-            console_error("Deepwoken Module Error:"..tostring(e))
+            console_error("PM Module Error:"..tostring(e))
         end
+    elseif game_name == "Voxlblade" and Drawing then
+    -- Currently Working On Mob ESP
     elseif game_name == "Deepwoken" and Drawing then
         local s, e = pcall(function()
             local Deepwoken_Tab = Window:CreateTab("Deepwoken")
