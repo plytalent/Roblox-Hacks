@@ -104,14 +104,21 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
 
     local targets = {"DeveloperProducts", "Container", "CosmeticInterfacePoints", "GhoulPoints"}
     local obj = gui 
-    for _index = 1, #targets do
-        while not obj:FindFirstChild(targets[_index]) do
-            RunService.RenderStepped:Wait()
-        end
-        obj = obj:FindFirstChild(targets[_index])
-    end
     RunService.RenderStepped:Connect(function()
-        GhoulPoints = tonumber(obj.Text:sub(17))
+        if obj == gui then
+            for _index = 1, #targets do
+                while not obj:FindFirstChild(targets[_index]) do
+                    RunService.RenderStepped:Wait()
+                end
+                obj = obj:FindFirstChild(targets[_index])
+            end
+        else
+            if obj.Parent then
+                GhoulPoints = tonumber(obj.Text:sub(17))
+            else
+                obj = gui
+            end
+        end       
     end)
 
     Tabs.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
