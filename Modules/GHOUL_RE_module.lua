@@ -102,18 +102,16 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
     local Remotes = ReplicatedStorage:WaitForChild("Remotes")
     local GhoulPoints = 0
 
-    task.spawn(function()
-        local targets = {"DeveloperProducts", "Container", "CosmeticInterfacePoints", "GhoulPoints"}
-        local obj = gui 
-        for __index = 1, #targets do
-            while not obj:FindFirstChild(targets[_index]) do
-                RunService.RenderStepped:Wait()
-            end
-            obj = obj:FindFirstChild(targets[_index])
+    local targets = {"DeveloperProducts", "Container", "CosmeticInterfacePoints", "GhoulPoints"}
+    local obj = gui 
+    for _index = 1, #targets do
+        while not obj:FindFirstChild(targets[_index]) do
+            RunService.RenderStepped:Wait()
         end
-        RunService.RenderStepped:Connect(function()
-            GhoulPoints = tonumber(obj.Text:sub(17))
-        end)
+        obj = obj:FindFirstChild(targets[_index])
+    end
+    RunService.RenderStepped:Connect(function()
+        GhoulPoints = tonumber(obj.Text:sub(17))
     end)
 
     Tabs.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
@@ -176,7 +174,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                         local oldv = WaitForType().Value
                         Remotes.GhoulPoint:FireServer(2151876503)
                         GuiService.SelectedCoreObject = gui.ActionConfirm.MainFrame.AcceptButton
-                        for _=1, 3 do
+                        for _=1, 60 do
                             RunService.RenderStepped:Wait()
                         end
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
@@ -187,7 +185,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                         print("Before",_type)
                         _type = WaitForType().Value
                         print("After",_type)
-                        for _=1, 30 do
+                        for _=1, 60 do
                             RunService.RenderStepped:Wait()
                         end
                     end
@@ -199,10 +197,10 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                     if not env.Auto_reroll then
                         reason = "ReRoll Canceled"
                     else
-                        if not table.find(env.SelectedKagune, _type) and GhoulPoints < 20 then
+                        if table.find(env.SelectedKagune, _type) == nil and GhoulPoints < 20 then
                             reason = "Not Enough GhoulPoints"
                             sub = "Got ".. tostring(GhoulPoints) .. " Points Left"
-                        else not table.find(env.SelectedKagune, _type) and GhoulPoints >= 20 then
+                        elseif table.find(env.SelectedKagune, _type) == nil and GhoulPoints >= 20 then
                             reason = "Logic Breaked"
                         end
                         env.Auto_reroll = false
