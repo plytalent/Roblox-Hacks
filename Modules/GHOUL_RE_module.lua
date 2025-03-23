@@ -123,12 +123,13 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
             local code = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/plytalent/Roblox-Hacks/refs/heads/main/Modules/GHOUL_RE_Codes.json")) 
             for i,v in ipairs(code) do
                 Remotes.CodeStuff:InvokeServer(v)
+                RunService.Stepped:Wait()
             end
         end
     })
     env.Auto_reroll = false
     env.SelectedKagunes = {}
-    local SelectedKaguneDropdown = Tabs.Main:AddDropdown("SelectedKaguneDropdown", {
+    local SelectedKaguneDropdown = Tabs.GHOUL_RE:AddDropdown("SelectedKaguneDropdown", {
         Title = "Dropdown",
         Description = "You can select What Kagune's To Stop When ReRoll",
         Values = {"Select Kagune's", "-Legendary-", "Eto", "Mayu", "Ken", "Takizawa", "Yomo", "Noro", "-Rare-", "Tsukiyama", "Yamori", "-Common-", "Wing", "Beaked", "Nishio"},
