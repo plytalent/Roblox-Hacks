@@ -172,6 +172,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                 local _type = WaitForType().Value
                 local s, err = pcall(function()
                     while not table.find(env.SelectedKagune,_type) and GhoulPoints >= 20 and env.Auto_reroll do
+                        print("Auto ReRoll",table.find(env.SelectedKagune,_type), env.SelectedKagune, _type, GhoulPoints, env.Auto_reroll)
                         local oldv = WaitForType().Value
                         Remotes.GhoulPoint:FireServer(2151876503)
                         GuiService.SelectedCoreObject = gui.ActionConfirm.MainFrame.AcceptButton
@@ -198,9 +199,11 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                     if not env.Auto_reroll then
                         reason = "ReRoll Canceled"
                     else
-                        if not table.find(env.SelectedKagune, _type) then
+                        if not table.find(env.SelectedKagune, _type) and GhoulPoints < 20 then
                             reason = "Not Enough GhoulPoints"
                             sub = "Got ".. tostring(GhoulPoints) .. " Points Left"
+                        else not table.find(env.SelectedKagune, _type) and GhoulPoints >= 20 then
+                            reason = "Logic Breaked"
                         end
                         env.Auto_reroll = false
                     end
