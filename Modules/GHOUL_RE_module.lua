@@ -5,7 +5,6 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
             Content = "Missing Arguments",
             Duration = 5 -- Set to nil to make the notification not disappear
         })
-        return
     end
     Fluent:Notify({
         Title = "Specific Game Module Loading",
@@ -149,12 +148,12 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
             end
         end
         env.SelectedKagune = Values
-        SelectedKaguneDropdown:SetValue(Update_DropDown)
     end)
     AutoKaguneReRollButton = Tabs.GHOUL_RE:AddButton({
         Title = "Auto Kagune ReRoll With GhoulPoints",
         Description = "Press Again To Stop Mid Way",
         Callback = function()
+            SelectedKaguneDropdown:SetValue(Update_DropDown)
             env.Auto_reroll = not env.Auto_reroll
             if env.Auto_reroll then
                 Fluent:Notify({
