@@ -122,7 +122,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
     end)
 
     Tabs.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
-    RedeemCodes = Tabs.GHOUL_RE:AddButton({
+    local RedeemCodes = Tabs.GHOUL_RE:AddButton({
         Title = "Redeem Codes",
         Callback = function()
             local code = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/plytalent/Roblox-Hacks/refs/heads/main/Modules/GHOUL_RE_Codes.json")) 
@@ -130,6 +130,33 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                 Remotes.CodeStuff:InvokeServer(v)
                 RunService.Stepped:Wait()
             end
+        end
+    })
+    local ResetCharacter = Tabs.GHOUL_RE:AddButton({
+        Title = "Reset Character",
+        Description = "This Will Set Your Character Health To Zero!",
+        Callback = function()
+            Window:Dialog({
+                Title = "Are You Sure You Want To Reset Character",
+                Content = "Reset Character In PermaDeath Will Result in your Character Wiped",
+                Buttons = {
+                    {
+                        Title = "Confirm",
+                        Callback = function()
+                            local hum = char:FindFirstChildOfClass("Humanoid")
+                            if hum then
+                                hum.Health = 0
+                            end
+                        end
+                    },
+                    {
+                        Title = "Cancel",
+                        Callback = function()
+                            
+                        end
+                    }
+                }
+            })
         end
     })
     env.Auto_reroll = false
