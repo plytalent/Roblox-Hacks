@@ -1,4 +1,4 @@
-return function (RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, env)
+return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, env)
     Fluent:Notify({
         Title = "Specific Game Module Loading",
         Content = "GHOUL://RE Module Loading",
@@ -83,7 +83,6 @@ return function (RunService, UIS, Players, Fluent, Options, SaveManager, Interfa
     })
     local VirtualInputManager = game:GetService("VirtualInputManager")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local HttpService = game:GetService("HttpService")
     local GuiService = game:GetService('GuiService')
     local plr = Players.LocalPlayer
     local gui = plr.PlayerGui
@@ -96,7 +95,7 @@ return function (RunService, UIS, Players, Fluent, Options, SaveManager, Interfa
     local Remotes = ReplicatedStorage:WaitForChild("Remotes")
     local GhoulPoints = 0
 
-    task.spawn(funciton()
+    task.spawn(function()
         local targets = {"DeveloperProducts", "Container", "CosmeticInterfacePoints", "GhoulPoints"}
         local obj = gui 
         for __index = 1, #targets do
@@ -105,7 +104,7 @@ return function (RunService, UIS, Players, Fluent, Options, SaveManager, Interfa
             end
             obj = obj:FindFirstChild(targets[_index])
         end
-        RunService.RenderStepped:Connect(funciton()
+        RunService.RenderStepped:Connect(function()
             GhoulPoints = tonumber(obj.Text:sub(17))
         end)
     end)
@@ -113,7 +112,7 @@ return function (RunService, UIS, Players, Fluent, Options, SaveManager, Interfa
     Tab.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
     RedeemCodes = Tab.GHOUL_RE:AddButton({
         Title = "Redeem Codes",
-        Callback = funciton()
+        Callback = function()
             local code = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/plytalent/Roblox-Hacks/refs/heads/main/Modules/GHOUL_RE_Codes.json")) 
             for i,v in ipairs(code) do
                 Remotes.CodeStuff:InvokeServer(v)
@@ -162,7 +161,7 @@ return function (RunService, UIS, Players, Fluent, Options, SaveManager, Interfa
                     return char.Type
                 end
                 local _type = WaitForType().Value
-                local s, err = pcall(funciton()
+                local s, err = pcall(function()
                     while not table.find(env.SelectedKagune,_type) and GhoulPoints >= 20 and env.Auto_reroll do
                         local oldv = WaitForType().Value
                         Remotes.GhoulPoint:FireServer(2151876503)
