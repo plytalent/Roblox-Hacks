@@ -137,9 +137,10 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
         Default = {"Select Kagune's"},
     })
     local SelectableValues = {"Eto", "Mayu", "Ken", "Takizawa", "Yomo", "Noro", "Tsukiyama", "Yamori", "Wing", "Beaked", "Nishio"}
+    local Update_DropDown = {}
     SelectedKaguneDropdown:OnChanged(function(Value)
         local Values = {}
-        local Update_DropDown = {}
+        Update_DropDown = {}
         for Value, State in next, Value do
             if table.find(SelectableValues,Value) then
                 Update_DropDown[Value] = true
