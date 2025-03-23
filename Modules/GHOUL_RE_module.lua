@@ -151,7 +151,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
         end
         env.SelectedKagune = Values
     end)
-    AutoKaguneReRollButton = Tabs.GHOUL_RE:AddButton({
+    local AutoKaguneReRollButton = Tabs.GHOUL_RE:AddButton({
         Title = "Auto Kagune ReRoll With GhoulPoints",
         Description = "Press Again To Stop Mid Way",
         Callback = function()
@@ -198,7 +198,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
                     if not env.Auto_reroll then
                         reason = "ReRoll Canceled"
                     else
-                        if table.find(env.SelectedKagune, _type) then
+                        if not table.find(env.SelectedKagune, _type) then
                             reason = "Not Enough GhoulPoints"
                             sub = "Got ".. tostring(GhoulPoints) .. " Points Left"
                         end
