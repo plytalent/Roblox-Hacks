@@ -1,4 +1,12 @@
 return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, env)
+    if not (HttpService and RunService and UIS and Players and Fluent and Options and SaveManager and InterfaceManager and Window and Tabs and env) then
+        Fluent:Notify({
+            Title = "Specific Game Module Init",
+            Content = "Missing Arguments",
+            Duration = 5 -- Set to nil to make the notification not disappear
+        })
+        return
+    end
     Fluent:Notify({
         Title = "Specific Game Module Loading",
         Content = "GHOUL://RE Module Loading",
