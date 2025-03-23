@@ -109,8 +109,8 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
         end)
     end)
 
-    Tab.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
-    RedeemCodes = Tab.GHOUL_RE:AddButton({
+    Tabs.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
+    RedeemCodes = Tabs.GHOUL_RE:AddButton({
         Title = "Redeem Codes",
         Callback = function()
             local code = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/plytalent/Roblox-Hacks/refs/heads/main/Modules/GHOUL_RE_Codes.json")) 
@@ -143,7 +143,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
         env.SelectedKagune = Values
         SelectedKaguneDropdown:SetValue(Update_DropDown)
     end)
-    AutoKaguneReRollButton = Tab.GHOUL_RE:AddButton({
+    AutoKaguneReRollButton = Tabs.GHOUL_RE:AddButton({
         Title = "Auto Kagune ReRoll With GhoulPoints",
         Description = "Press Again To Stop Mid Way",
         Callback = function()
