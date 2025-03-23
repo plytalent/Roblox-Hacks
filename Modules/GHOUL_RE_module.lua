@@ -130,7 +130,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
     env.Auto_reroll = false
     env.SelectedKagunes = {}
     local SelectedKaguneDropdown = Tabs.GHOUL_RE:AddDropdown("SelectedKaguneDropdown", {
-        Title = "Dropdown",
+        Title = "Select Kagunes To NOT ReRoll",
         Description = "You can select What Kagune's To Stop When ReRoll",
         Values = {"Select Kagune's", "-Legendary-", "Eto", "Mayu", "Ken", "Takizawa", "Yomo", "Noro", "-Rare-", "Tsukiyama", "Yamori", "-Common-", "Wing", "Beaked", "Nishio"},
         Multi = true,
