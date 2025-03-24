@@ -18,7 +18,7 @@ end)
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-local getgenv = getgenv or function() if not _G.getgenv then print("Create getgenv Tables")_G.getgenv = {} return _G.getgenv end
+local getgenv = getgenv or function() if not _G.getgenv then print("Create getgenv Tables")_G.getgenv = {} end return _G.getgenv end
 local env = getgenv() 
 
 local Window = Fluent:CreateWindow({
@@ -177,36 +177,45 @@ local delta2 = tick()
 local leftorright,backorforward = 0,0
 local targetCF
 RunService.Stepped:Connect(function()
-    local _delta = tick()-delta
-    delta = tick()
-    if _delta >= (1/60)*0.99 then
-        if Options.Fly.Value or Options.Speed.Value then
-            local rx,ry,rz = workspace.CurrentCamera.CFrame:ToOrientation()
-            targetCF = CFrame.new(0,0,0)*CFrame.Angles(0,ry,0)
-            if Options.Fly.Value then
-                targetCF = targetCF * CFrame.Angles(rx,0,0)
-            end
-            if Options.Speed.Value and Character.PrimaryPart then
-                cf_of_hrp = Character:GetPrimaryPartCFrame()
-            end
-            cf_of_hrp = (CFrame.new(cf_of_hrp.p) * targetCF)*CFrame.new(movement_dir_x, 0, movement_dir_z)
-            if Character ~= nil then
-                if env.MovementMode == "Positioning" then
-                    Character:SetPrimaryPartCFrame(cf_of_hrp)
-                    Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-                elseif env.MovementMode == "Velocity" then
-                    local Grav = Vector3.new(0,rootpart.Velocity.y,0)
-                    if Options.Fly.Value then
-                        Grav = Vector3.new(0, 9.8, 0)
-                    end
-                    local lk = CFrame.new(rootpart.Position, cf_of_hrp.Position).LookVector
-                    local dist = (cf_of_hrp.Position - (rootpart.Position + (newvelocity * delta))).Magnitude
-                    local newvelocity = ((lk * (variables.manaflyspeed*10)) + Grav) * dist
-                    rootpart.Velocity = newvelocity
-                end
-            end
-        end
-    end
+	local _delta = tick()-delta
+	delta = tick()
+	if _delta >= (1/60)*0.99 then
+		if Options.Fly.Value or Options.Speed.Value then
+			local rx,ry,rz = workspace.CurrentCamera.CFrame:ToOrientation()
+			targetCF = CFrame.new(0,0,0)*CFrame.Angles(0,ry,0)
+			if Options.Fly.Value then
+				targetCF = targetCF * CFrame.Angles(rx,0,0)
+			end
+			if Options.Speed.Value and Character.PrimaryPart then
+				cf_of_hrp = Character:GetPrimaryPartCFrame()
+			end
+			cf_of_hrp = (CFrame.new(cf_of_hrp.p) * targetCF)*CFrame.new(movement_dir_x, 0, movement_dir_z)
+			if Character ~= nil then
+				if env.MovementMode == "Positioning" then
+					Character:SetPrimaryPartCFrame(cf_of_hrp)
+					Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+				elseif env.MovementMode == "Velocity" then
+					if Options.Fly.Value then
+						local Grav = Vector3.new(0, lastY - rootpart.Position.Y, 0)* _delta
+						lastY = rootpart.Position.Y
+						local lk = CFrame.new(rootpart.Position, cf_of_hrp.Position).LookVector
+						local newvelocity = ((lk * (Options.MovementSpeed.Value*10))) * (cf_of_hrp.Position - (rootpart.Position + (((lk * (Options.MovementSpeed.Value*10))) * _delta))).Magnitude
+						if not (newvelocity.X < 100 and newvelocity.X > -100) then
+							newvelocity = Vector3.new((newvelocity.X/newvelocity.X)*100, newvelocity.Y, newvelocity.Z)
+						end
+						if not (newvelocity.Y < 100 and newvelocity.Y > -100) then
+							newvelocity = Vector3.new(newvelocity.X, (newvelocity.Y/newvelocity.Y)*100, newvelocity.Z)
+						end
+						if not (newvelocity.Z < 100 and newvelocity.Z > -100) then
+							newvelocity = Vector3.new(newvelocity.X, newvelocity.Y, (newvelocity.Z/newvelocity.Z)*100)
+						end
+						rootpart.Velocity = newvelocity + Grav
+						print(Grav.Y,newvelocity.Y)
+					end
+				end
+			end
+		end
+	end
 end)
 UIS.InputBegan:Connect(function(input,gameProcessed)
     local k = input.KeyCode.Name:lower()
