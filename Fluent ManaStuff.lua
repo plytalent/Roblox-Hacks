@@ -4,18 +4,22 @@ local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-local MANAFLY = CFrame.new()
+local rootpart = Character.HumanoidRootPart
+local cf_of_hrp = CFrame.new()
 LocalPlayer.CharacterAdded:Connect(function(newcharacter)
     Character = newcharacter
-    MANAFLY = Character:GetPrimaryPartCFrame()
+    while Character.PrimaryPart == nil do
+        RunService.Stepped:Wait()
+    end
+    cf_of_hrp = Character:GetPrimaryPartCFrame()
+    rootpart = Character.HumanoidRootPart
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-local env = getgenv()
+local getgenv = getgenv or function() if not _G.getgenv then print("Create getgenv Tables")_G.getgenv = {} return _G.getgenv end
+local env = getgenv() 
 
 local Window = Fluent:CreateWindow({
     Title = "ManaStuff",
@@ -75,6 +79,15 @@ local ManaSpeed = Tabs.Main:AddSlider("MovementSpeed", {
     end
 })
 
+local MovementModeDropdown = Tabs.Main:AddDropdown("MovementMode",
+    Title = "ManaFly/Run Type",
+    Values = {"Positioning", "Velocity"},
+    Default = {"Positioning"},
+)
+MovementModeDropdown:OnChanged(function(Value)
+    env.MovementMode = Value
+end)
+
 local ManaSoulKey = Tabs.Keybinds:AddKeybind("ManaSoulKeyBind", {
     Title = "ManaSoul Key",
     Mode = "Toggle",
@@ -92,7 +105,9 @@ local ManaRunKey = Tabs.Keybinds:AddKeybind("ManaFlyKeyBind", {
 })
 
 ManaFlyToggle:OnChanged(function()
-    MANAFLY = Character:GetPrimaryPartCFrame()
+    if Character.PrimaryPart then
+        cf_of_hrp = Character:GetPrimaryPartCFrame()
+    end
 end)
 
 ManaSoulKey:OnClick(function()
@@ -101,7 +116,9 @@ end)
 
 ManaFlyKey:OnClick(function()
     Options.Fly:SetValue(not Options.Fly.Value)
-    MANAFLY = Character:GetPrimaryPartCFrame()
+    if Character.PrimaryPart then
+        cf_of_hrp = Character:GetPrimaryPartCFrame()
+    end
     movement_dir_z, movement_dir_x = 0, 0
     local change = (Options.MovementSpeed.Value / 100)
     if UIS:IsKeyDown(Enum.KeyCode.S) then
@@ -147,10 +164,10 @@ getgenv().Manastuff_NoClip_EV = RunService.Stepped:Connect(function()
     end
 end)
 function env.InputBegan_Callback(input,gameProcessed)
-    
+    --// dummy Function
 end
 function env.InputEnded_Callback(input,gameProcessed)
-    
+    --// dummy Function
 end
 --// Variables
 local framelimit = 60
@@ -160,26 +177,33 @@ local delta2 = tick()
 local leftorright,backorforward = 0,0
 local targetCF
 RunService.Stepped:Connect(function()
-    if Options.Fly.Value then
-        if (tick()-delta) >= 1/60 then
-            targetCF = workspace.CurrentCamera.CFrame
-			local rx,ry,rz = targetCF:ToOrientation()
-			targetCF = CFrame.new(0,0,0)*CFrame.Angles(0,ry,0) *CFrame.Angles(rx,0,0)
-            MANAFLY = (CFrame.new(MANAFLY.p) * targetCF)*CFrame.new(movement_dir_x, 0, movement_dir_z)
-            if Character ~= nil then
-                Character:SetPrimaryPartCFrame(MANAFLY)
-                Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+    local _delta = tick()-delta
+    delta = tick()
+    if _delta >= (1/60)*0.99 then
+        if Options.Fly.Value or Options.Speed.Value then
+            local rx,ry,rz = workspace.CurrentCamera.CFrame:ToOrientation()
+            targetCF = CFrame.new(0,0,0)*CFrame.Angles(0,ry,0)
+            if Options.Fly.Value then
+                targetCF = targetCF * CFrame.Angles(rx,0,0)
             end
-        end
-    elseif Options.Speed.Value and Character then
-        if (tick()-delta) >= 1/60 then
-            delta = tick()
-            targetCF = workspace.CurrentCamera.CFrame
-            local rx,ry,rz = targetCF:ToOrientation()
-            targetCF = (CFrame.new(Character:GetPrimaryPartCFrame().p)*CFrame.Angles(0,ry,0)) * CFrame.new(movement_dir_x, 0, movement_dir_z)
-            
+            if Options.Speed.Value and Character.PrimaryPart then
+                cf_of_hrp = Character:GetPrimaryPartCFrame()
+            end
+            cf_of_hrp = (CFrame.new(cf_of_hrp.p) * targetCF)*CFrame.new(movement_dir_x, 0, movement_dir_z)
             if Character ~= nil then
-                Character:SetPrimaryPartCFrame(targetCF)
+                if env.MovementMode == "Positioning" then
+                    Character:SetPrimaryPartCFrame(cf_of_hrp)
+                    Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                elseif env.MovementMode == "Velocity" then
+                    local Grav = Vector3.new(0,rootpart.Velocity.y,0)
+                    if Options.Fly.Value then
+                        Grav = Vector3.new(0, 9.8, 0)
+                    end
+                    local lk = CFrame.new(rootpart.Position, cf_of_hrp.Position).LookVector
+                    local dist = (cf_of_hrp.Position - (rootpart.Position + (newvelocity * delta))).Magnitude
+                    local newvelocity = ((lk * (variables.manaflyspeed*10)) + Grav) * dist
+                    rootpart.Velocity = newvelocity
+                end
             end
         end
     end
@@ -280,33 +304,13 @@ if not s then
         Duration = 8
     })
 end
--- Addons:
--- SaveManager (Allows you to have a configuration system)
--- InterfaceManager (Allows you to have a interface managment system)
-
--- Hand the library over to our managers
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
--- Ignore keys that are used by ThemeManager.
--- (we dont want configs to save themes, do we?)
 SaveManager:IgnoreThemeSettings()
-
--- You can add indexes of elements the save manager should ignore
 SaveManager:SetIgnoreIndexes({})
-
--- use case for doing it this way:
--- a script hub could have themes in a global folder
--- and game configs in a separate folder per game
 InterfaceManager:SetFolder("Manastuff Hub")
 SaveManager:SetFolder("Manastuff Hub/"..tostring(game.PlaceId))
-
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
-
-
 Window:SelectTab(1)
-
--- You can use the SaveManager:LoadAutoloadConfig() to load a config
--- which has been marked to be one that auto loads!
 SaveManager:LoadAutoloadConfig()
