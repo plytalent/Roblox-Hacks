@@ -14,6 +14,11 @@ LocalPlayer.CharacterAdded:Connect(function(newcharacter)
     cf_of_hrp = Character:GetPrimaryPartCFrame()
     rootpart = Character.HumanoidRootPart
 end)
+
+local Fluent
+local SaveManager
+local InterfaceManager
+
 if RunService:IsStudio() then
     Fluent = require(game:GetService("ReplicatedStorage").Fluent)
 else
@@ -21,6 +26,7 @@ else
     SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
     InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 end
+
 local getgenv = getgenv or function() if not _G.getgenv then warn("Create getgenv Tables")_G.getgenv = {} end return _G.getgenv end
 local env = getgenv()
 local Drawing_Exist, _ = pcall(function() Drawing.new("Text"):Remove() return nil end)
