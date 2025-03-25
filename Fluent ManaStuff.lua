@@ -21,7 +21,7 @@ else
     SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
     InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 end
-local getgenv = getgenv or function() if not _G.getgenv then print("Create getgenv Tables")_G.getgenv = {} end return _G.getgenv end
+local getgenv = getgenv or function() if not _G.getgenv then warn("Create getgenv Tables")_G.getgenv = {} end return _G.getgenv end
 local env = getgenv()
 local Drawing_Exist, _ = pcall(function() Drawing.new("Text"):Remove() return nil end)
 
@@ -255,7 +255,7 @@ ManaRunKey:OnClick(function()
         movement_dir_x = movement_dir_x - change
     end
 end)
-getgenv().Manastuff_NoClip_EV = RunService.Stepped:Connect(function()
+env.Manastuff_NoClip_EV = RunService.Stepped:Connect(function()
     if Options.NoClip.Value then
         if Character then
             for _,v in pairs(Character:GetDescendants())do
@@ -331,7 +331,7 @@ UIS.InputBegan:Connect(function(input,gameProcessed)
     elseif k == "d" then
         movement_dir_x = movement_dir_x + (Options.MovementSpeed.Value / 100)
     end
-    getgenv().InputBegan_Callback(input,gameProcessed)
+    env.InputBegan_Callback(input,gameProcessed)
 end)
 UIS.InputEnded:Connect(function(input,gameProcessed)
     local k = input.KeyCode.Name:lower()
@@ -344,7 +344,7 @@ UIS.InputEnded:Connect(function(input,gameProcessed)
     elseif k == "d" then
         movement_dir_x = movement_dir_x - (Options.MovementSpeed.Value / 100)
     end
-    getgenv().InputEnded_Callback(input,gameProcessed)
+    env.InputEnded_Callback(input,gameProcessed)
 end)
 
 Fluent:Notify({
@@ -373,7 +373,7 @@ if not RunService:IsStudio() then
             local _s, sub_module_init = pcall(loadstring(sub_module_source))
             if _s then
                 if sub_module_init then 
-                    local _s, e = pcall(sub_module_init,HttpService, RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, getgenv())
+                    local _s, e = pcall(sub_module_init, HttpService, RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, getgenv())
                     if _s then
                         Fluent:Notify({
                             Title = "SubModule",
@@ -423,20 +423,27 @@ else
         Duration = 8
     })
 end
-if SaveManager and InterfaceManager then
+if SaveManager then
     SaveManager:SetLibrary(Fluent)
-    InterfaceManager:SetLibrary(Fluent)
     SaveManager:IgnoreThemeSettings()
     SaveManager:SetIgnoreIndexes({})
-    InterfaceManager:SetFolder("Manastuff Hub")
     SaveManager:SetFolder("Manastuff Hub/"..tostring(game.PlaceId))
-    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
     SaveManager:BuildConfigSection(Tabs.Settings)
     SaveManager:LoadAutoloadConfig()
 else
     Tabs.Settings:AddParagraph({
-        Title = "Missing Library",
-        Content = "Can't Use Save Manager And Interface Manager"
+        Title = "Save Manager Library Missing",
+        Content = "Save Manager Not Available"
+    })
+end    
+if InterfaceManager then
+    InterfaceManager:SetLibrary(Fluent)
+    InterfaceManager:SetFolder("Manastuff Hub")
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+else
+    Tabs.Settings:AddParagraph({
+        Title = "Interface Manager Library Missing",
+        Content = "Interface Manager Not Available"
     })
 end
 Window:SelectTab(1)
