@@ -19,8 +19,58 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 local getgenv = getgenv or function() if not _G.getgenv then print("Create getgenv Tables")_G.getgenv = {} end return _G.getgenv end
-local env = getgenv() 
-
+local env = getgenv()
+local Drawing_Exist = pcall(function() Drawing.new("Text"):Remove() end)
+function worldpoint_to_viewpoint(pos)
+    local pos, in_fov = workspace.CurrentCamera:WorldToViewportPoint(pos)
+    return {Vector2.new(pos.X,pos.Y),in_fov}
+end
+if Drawing_Exist then
+    function synTextLabel()
+        if not env._Drawing then
+            env._Drawing = {}
+        end
+        local TextLabel = Drawing.new("Text")
+        env._Drawing[#env._Drawing+1] = TextLabel
+        TextLabel.Text = "Place"
+        TextLabel.Size = 24
+        TextLabel.Center = true
+        TextLabel.Outline = true
+        TextLabel.Color = Color3.new(255/255, 0/255, 0/255)
+        TextLabel.OutlineColor = Color3.new(0, 0, 0)
+        return TextLabel
+    end
+    local Visualize = env.Visualize
+    env.Enable_Visualize = false
+    if not Visualize then 
+        Visualize = synTextLabel()
+        env.Visualize = Visualize
+    else
+        RunService:UnbindFromRenderStep("Visualize CF_hrp_point")
+    end     
+    RunService:BindToRenderStep("Visualize CF_hrp_point", 0,function()
+        local cf_p = cf_of_hrp.p
+        local point_fov = worldpoint_to_viewpoint(cf_p)
+        Visualize.Text = string.format("Current Point: [X: %.2f][Y: %.2f][Z: %.2f]",cf_p.X,cf_p.Y,cf_p.Z)
+        Visualize.Position = pos_and_infov[1]
+        Visualize.Visible = in_fov[2] and env.Enable_Visualize
+    end)
+else
+    function synTextLabel()
+        if not env._Drawing then
+            env._Drawing = {}
+        end
+        local TextLabel = {}
+        env._Drawing[#env._Drawing+1] = TextLabel
+        TextLabel.Text = "Place"
+        TextLabel.Size = 24
+        TextLabel.Center = true
+        TextLabel.Outline = true
+        TextLabel.Color = Color3.new(255/255, 0/255, 0/255)
+        TextLabel.OutlineColor = Color3.new(0, 0, 0)
+        return TextLabel
+    end
+end
 local Window = Fluent:CreateWindow({
     Title = "ManaStuff",
     SubTitle = "by RubyTheSilent",
@@ -170,48 +220,49 @@ function env.InputEnded_Callback(input,gameProcessed)
     --// dummy Function
 end
 --// Variables
-local framelimit = 60
-local localposition = CFrame.new()
 local delta = tick()
-local delta2 = tick()
 local leftorright,backorforward = 0,0
 local targetCF
+local anti_grav = 2.9
 RunService.Stepped:Connect(function()
 	local _delta = tick()-delta
 	delta = tick()
-	if _delta >= (1/60)*0.99 then
+	if math.abs((cf_of_hrp.Position.Y+1.45) - rootpart.Position.Y) > 0.0001 then
+		print((cf_of_hrp.Position.Y+1.45) - rootpart.Position.Y)
+		anti_grav = (cf_of_hrp.Position.Y+1.45) - rootpart.Position.Y
+	end
+	if _delta >= (1/60)*0.99 or env.MovementMode == "Velocity" then
 		if Options.Fly.Value or Options.Speed.Value then
 			local rx,ry,rz = workspace.CurrentCamera.CFrame:ToOrientation()
 			targetCF = CFrame.new(0,0,0)*CFrame.Angles(0,ry,0)
 			if Options.Fly.Value then
 				targetCF = targetCF * CFrame.Angles(rx,0,0)
 			end
-			if Options.Speed.Value and Character.PrimaryPart then
+			if Options.Speed.Value and env.MovementMode == "Positioning" and Character.PrimaryPart then
 				cf_of_hrp = Character:GetPrimaryPartCFrame()
 			end
 			cf_of_hrp = (CFrame.new(cf_of_hrp.p) * targetCF)*CFrame.new(movement_dir_x, 0, movement_dir_z)
 			if Character ~= nil then
-				if env.MovementMode == "Positioning" then
+				if env.MovementMode == "Positioning" and Character.PrimaryPart then
 					Character:SetPrimaryPartCFrame(cf_of_hrp)
-					Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-				elseif env.MovementMode == "Velocity" then
 					if Options.Fly.Value then
-						local Grav = Vector3.new(0, lastY - rootpart.Position.Y, 0)* _delta
-						lastY = rootpart.Position.Y
-						local lk = CFrame.new(rootpart.Position, cf_of_hrp.Position).LookVector
-						local newvelocity = ((lk * (Options.MovementSpeed.Value*10))) * (cf_of_hrp.Position - (rootpart.Position + (((lk * (Options.MovementSpeed.Value*10))) * _delta))).Magnitude
-						if not (newvelocity.X < 100 and newvelocity.X > -100) then
-							newvelocity = Vector3.new((newvelocity.X/newvelocity.X)*100, newvelocity.Y, newvelocity.Z)
-						end
-						if not (newvelocity.Y < 100 and newvelocity.Y > -100) then
-							newvelocity = Vector3.new(newvelocity.X, (newvelocity.Y/newvelocity.Y)*100, newvelocity.Z)
-						end
-						if not (newvelocity.Z < 100 and newvelocity.Z > -100) then
-							newvelocity = Vector3.new(newvelocity.X, newvelocity.Y, (newvelocity.Z/newvelocity.Z)*100)
-						end
-						rootpart.Velocity = newvelocity + Grav
-						print(Grav.Y,newvelocity.Y)
+						rootpart.Velocity = Vector3.new(0,0,0)
 					end
+				elseif env.MovementMode == "Velocity" then
+					local Intensity = (rootpart.Position - cf_of_hrp.Position).Magnitude
+					local lk = Vector3.new(0,0,0)
+					if Intensity < 10 then
+						lk = (cf_of_hrp.Position - rootpart.Position).Unit*(Intensity*10)
+					else
+						lk = (cf_of_hrp.Position - rootpart.Position).Unit*(Intensity*Intensity)
+					end
+					
+					local target_velocity = lk
+					local yv = target_velocity.Y + anti_grav
+					if Options.Speed.Value then
+						yv = rootpart.Velocity.y
+					end
+					rootpart.Velocity = Vector3.new(target_velocity.X, yv , target_velocity.Z)
 				end
 			end
 		end
