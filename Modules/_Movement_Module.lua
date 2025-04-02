@@ -2,11 +2,12 @@ return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
     env.ManaStuff_Movement_module_Env = env.ManaStuff_Movement_module_Env or {}
     local env = env.ManaStuff_Movement_module_Env
     local Fluent = Variables.Fluent
-    local UIS = Variables.UIS
-    local Players = Variables.Players
-    local LocalPlayer = Variables.LocalPlayer
-    local Character = Variables.Character
-    local rootpart = Variables.HumanoidRootPart
+    local UIS = game:GetService("UserInputService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local rootpart = Character.HumanoidRootPart
+    local RunService = game:GetService("RunService")
     local player_module = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
     local control_module = player_module:GetControls()
 
