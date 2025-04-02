@@ -1,5 +1,6 @@
 return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption, MovementSpeedOption)
-    env.ManaStuff_Movement_module_Env = env.ManaStuff_Movement_module_Env or {}
+    local getgenv = getgenv or function() return _G end
+    getgenv().ManaStuff_Movement_module_Env = getgenv().ManaStuff_Movement_module_Env or {}
     local env = env.ManaStuff_Movement_module_Env
     local Fluent = Variables.Fluent
     local UIS = game:GetService("UserInputService")
