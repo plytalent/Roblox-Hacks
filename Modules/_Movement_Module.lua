@@ -1,4 +1,4 @@
-return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
+return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption, MovementSpeedOption)
     env.ManaStuff_Movement_module_Env = env.ManaStuff_Movement_module_Env or {}
     local env = env.ManaStuff_Movement_module_Env
     local Fluent = Variables.Fluent
@@ -32,27 +32,31 @@ return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
     }
     local fly_name  = _ManaFlyToggleOption.Title
     local run_name = _ManaRunToggleOption.Title
-    local movement_dir_z, movement_dir_x = 0, 0
-    local Options = Fluent.Options
-    local ManaFlyToggle = Tab:AddToggle("_Fly", _ManaFlyToggleOption)
-    local ManaRunToggle = Tab:AddToggle("_Speed", _ManaRunToggleOption)
-    local ManaSpeed = Tab:AddSlider("MovementSpeed", {
-        Title = "Mana Speed",
+    local _MovementSpeedOption = MovementSpeedOption or {
+        Title = "Speed",
         Description = "Speed For Both "..fly_name.."/"..run_name,
         Default = 250,
         Min = 0,
         Max = 1000,
         Rounding = 1,
-        Callback = function(Value)
-            local change = Value/100
-            local change = (Options._MovementSpeed.Value / 100)
-            if UIS:IsKeyDown(Enum.KeyCode.S) or UIS:IsKeyDown(Enum.KeyCode.W) or UIS:IsKeyDown(Enum.KeyCode.D) or UIS:IsKeyDown(Enum.KeyCode.A) then
-                local new_vector = control_module:GetMoveVector() * change
-                movement_dir_x = new_vector.x
-                movement_dir_z = new_vector.z
-            end
+    }
+    
+    local movement_dir_z, movement_dir_x = 0, 0
+    local Options = Fluent.Options
+    local ManaFlyToggle = Tab:AddToggle("_Fly", _ManaFlyToggleOption)
+    local ManaRunToggle = Tab:AddToggle("_Speed", _ManaRunToggleOption)
+
+    _MovementSpeedOption.Callback = function(Value)
+        local change = Value/100
+        local change = (Options._MovementSpeed.Value / 100)
+        if UIS:IsKeyDown(Enum.KeyCode.S) or UIS:IsKeyDown(Enum.KeyCode.W) or UIS:IsKeyDown(Enum.KeyCode.D) or UIS:IsKeyDown(Enum.KeyCode.A) then
+            local new_vector = control_module:GetMoveVector() * change
+            movement_dir_x = new_vector.x
+            movement_dir_z = new_vector.z
         end
-    })
+    end
+    local ManaSpeed = Tab:AddSlider("MovementSpeed", _MovementSpeedOption)
+    
     local MovementModeDropdown = Tab:AddDropdown("_MovementMode",{
         Title = fly_name.."/"..run_name.." Type",
         Values = {"Positioning", "Velocity", "BodyMover(Velocity)", "BodyMover(Position)", "AlignPosition"},
