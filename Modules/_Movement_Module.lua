@@ -111,8 +111,10 @@ return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
     local leftorright,backorforward = 0,0
     local targetCF
     local anti_grav = 2.9
-
-    RunService.Stepped:Connect(function()
+    if env.Stepped_Event then
+        env.Stepped_Event:Disconnect()
+    end
+    env.Stepped_Event = RunService.Stepped:Connect(function()
         local _delta = tick()-delta
         delta = tick()
         if math.abs((cf_of_hrp.Position.Y+1.45) - rootpart.Position.Y) > 0.0001 then
@@ -213,7 +215,10 @@ return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
             end
         end
     end)
-    UIS.InputBegan:Connect(function(input,gameProcessed)
+    if env.InputBegan_Event then
+        env.InputBegan_Event:Disconnect()
+    end
+    env.InputBegan_Event = UIS.InputBegan:Connect(function(input,gameProcessed)
         local k = input.KeyCode.Name:lower()
         if k == "w" or k == "s" or k == "a" or k == "d" then
             local change = (Options._MovementSpeed.Value / 100)
@@ -222,7 +227,10 @@ return function (Variables, Tab, ManaFlyToggleOption, ManaRunToggleOption)
             movement_dir_z = new_vector.z
         end
     end)
-    UIS.InputEnded:Connect(function(input,gameProcessed)
+    if env.InputEnded_Event then
+        env.InputEnded_Event:Disconnect()
+    end
+    env.InputEnded_Event = UIS.InputEnded:Connect(function(input,gameProcessed)
         local k = input.KeyCode.Name:lower()
         if k == "w" or k == "s" or k == "a" or k == "d" then
             local change = (Options._MovementSpeed.Value / 100)
