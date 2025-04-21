@@ -1,3 +1,54 @@
+if not _G.RubyEnv then
+    -- Check if the singleton already exists
+
+    local RubyEnv = {}
+    RubyEnv.__index = RubyEnv
+
+    -- Internal state
+    local internal_args = {}
+    local internal_vars = {}
+
+    -- Argument management
+    function RubyEnv:get_args()
+        return internal_args
+    end
+
+    function RubyEnv:set_args(...)
+        internal_args = {...}
+    end
+
+    -- Variable storage
+    function RubyEnv:get_var(name)
+        return internal_vars[name]
+    end
+
+    function RubyEnv:set_var(name, value)
+        internal_vars[name] = value
+    end
+
+    -- Function wrapping
+    function RubyEnv:wrap_function(fn)
+        return function(...)
+            local args = {...}
+            local storeargs = self:get_args()
+            if #storeargs > 0 then
+                args = storeargs
+            end
+            return fn(table.unpack(args))
+        end
+    end
+
+    function RubyEnv:call_function(fn, ...)
+        local args = {...}
+        self:set_args(table.unpack(args))
+        return fn(table.unpack(args))
+    end
+
+    -- Assign to global namespace
+    _G.RubyEnv = setmetatable({}, RubyEnv)
+end
+local RubyEnv = _G.RubyEnv
+
 local module = {}
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
@@ -10,7 +61,10 @@ module.require_variables = {
 }
 module.Main_Function_Name = "Main"
 function module.Main(Variables)
-	print(Variables)
+	local storedargs = RubyEnv:get_args()
+	if #storedargs>0 then
+		Variables = storedargs[0]
+	end	
 	module.Fluent = Variables.Fluent
 	module.Window = Variables.Window
 	module.Tabs = Variables.Tabs
@@ -34,17 +88,17 @@ function module.Main(Variables)
 		end
 	})
 	if setclipboard then
-	module.Tab_Teleport_Service:AddButton({
-		Title = "Click To Copy JobId",
-		Description = "JobID:" .. game.JobId,
-		Callback = function()
-			if setclipboard then
-				setclipboard(game.JobId)
-			else
-				print(game.JobId)
+		module.Tab_Teleport_Service:AddButton({
+			Title = "Click To Copy JobId",
+			Description = "JobID:" .. game.JobId,
+			Callback = function()
+				if setclipboard then
+					setclipboard(game.JobId)
+				else
+					print(game.JobId)
+				end
 			end
-		end
-	})
+		})
 	end
 	if not getclipboard then
 		local Input = module.Tab_Teleport_Service:AddInput("JobId_Input", {
