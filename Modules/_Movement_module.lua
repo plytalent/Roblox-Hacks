@@ -1,6 +1,63 @@
+if not _G.RubyEnv then
+    -- Check if the singleton already exists
+
+    local RubyEnv = {}
+    RubyEnv.__index = RubyEnv
+
+    -- Internal state
+    local internal_args = {}
+    local internal_vars = {}
+
+    -- Argument management
+    function RubyEnv:get_args()
+        return internal_args
+    end
+
+    function RubyEnv:set_args(...)
+        internal_args = {...}
+    end
+
+    -- Variable storage
+    function RubyEnv:get_var(name)
+        return internal_vars[name]
+    end
+
+    function RubyEnv:set_var(name, value)
+        internal_vars[name] = value
+    end
+
+    -- Function wrapping
+    function RubyEnv:wrap_function(fn)
+        return function(...)
+            local args = {...}
+            local storeargs = self:get_args()
+            if #storeargs > 0 then
+                args = storeargs
+            end
+            return fn(table.unpack(args))
+        end
+    end
+
+    function RubyEnv:call_function(fn, ...)
+        local args = {...}
+        self:set_args(table.unpack(args))
+        return fn(table.unpack(args))
+    end
+
+    -- Assign to global namespace
+    _G.RubyEnv = setmetatable({}, RubyEnv)
+end
+local RubyEnv = _G.RubyEnv
 return function (Variables, Tabs, ManaFlyToggleOption, ManaRunToggleOption, MovementSpeedOption)
-	print(Variables)
-	local getgenv = getgenv or function() return _G end
+	local storedargs = RubyEnv:get_args()
+	if #storedargs>0 then
+		Variables           = storedargs[0]
+		Tabs                = storedargs[1]
+		ManaFlyToggleOption = storedargs[2]
+		ManaRunToggleOption = storedargs[3]
+		MovementSpeedOption = storedargs[4]
+	end	
+	local getgenv = getgenv or function() if not _G.getgenv then warn("Create getgenv Tables") _G.getgenv = _G.getgenv or {} end return _G.getgenv end
 	getgenv().ManaStuff_Movement_module_Env = getgenv().ManaStuff_Movement_module_Env or {}
 	local env = getgenv().ManaStuff_Movement_module_Env
 	local Fluent = Variables.Fluent
