@@ -1,4 +1,69 @@
+if not _G.RubyEnv then
+    -- Check if the singleton already exists
+
+    local RubyEnv = {}
+    RubyEnv.__index = RubyEnv
+
+    -- Internal state
+    local internal_args = {}
+    local internal_vars = {}
+
+    -- Argument management
+    function RubyEnv:get_args()
+        return internal_args
+    end
+
+    function RubyEnv:set_args(...)
+        internal_args = {...}
+    end
+
+    -- Variable storage
+    function RubyEnv:get_var(name)
+        return internal_vars[name]
+    end
+
+    function RubyEnv:set_var(name, value)
+        internal_vars[name] = value
+    end
+
+    -- Function wrapping
+    function RubyEnv:wrap_function(fn)
+        return function(...)
+            local args = {...}
+            local storeargs = self:get_args()
+            if #storeargs > 0 then
+                args = storeargs
+            end
+            return fn(table.unpack(args))
+        end
+    end
+
+    function RubyEnv:call_function(fn, ...)
+        local args = {...}
+        self:set_args(table.unpack(args))
+        return fn(table.unpack(args))
+    end
+
+    -- Assign to global namespace
+    _G.RubyEnv = setmetatable({}, RubyEnv)
+end
+local RubyEnv = _G.RubyEnv
+
 return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveManager, InterfaceManager, Window, Tabs, env)
+    local storedargs = RubyEnv:get_args()
+    if #storedargs > 0 then
+        HttpService      = storedargs[1]
+        RunService       = storedargs[2]
+        UIS              = storedargs[3]
+        Players          = storedargs[4]
+        Fluent           = storedargs[5]
+        Options          = storedargs[6]
+        SaveManager      = storedargs[7]
+        InterfaceManager = storedargs[8]
+        Window           = storedargs[9]
+        Tabs             = storedargs[10]
+        env              = storedargs[11]
+    end
     if not (HttpService and RunService and UIS and Players and Fluent and Options and SaveManager and InterfaceManager and Window and Tabs and env) then
         Fluent:Notify({
             Title = "Specific Game Module Init",
@@ -122,7 +187,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
     end)
 
     Tabs.GHOUL_RE = Window:AddTab({ Title = "GHOUL://RE", Icon = "joystick" })
-    local RedeemCodes = Tabs.GHOUL_RE:AddButton({
+    RedeemCodes = Tabs.GHOUL_RE:AddButton({
         Title = "Redeem Codes",
         Callback = function()
             local code = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/plytalent/Roblox-Hacks/refs/heads/main/Modules/GHOUL_RE_Codes.json")) 
@@ -132,7 +197,7 @@ return function (HttpService, RunService, UIS, Players, Fluent, Options, SaveMan
             end
         end
     })
-    local ResetCharacter = Tabs.GHOUL_RE:AddButton({
+    ResetCharacter = Tabs.GHOUL_RE:AddButton({
         Title = "Reset Character",
         Description = "This Will Set Your Character Health To Zero!",
         Callback = function()
