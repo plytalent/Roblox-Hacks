@@ -51,9 +51,9 @@ local RubyEnv = _G.RubyEnv
 
 return function(Fluent,module_name_or_place_id)
 	local storedargs = RubyEnv:get_args()
-	if #storeargs>0 then
-		Fluent                  = storeargs[0]
-		module_name_or_place_id = storeargs[1]
+	if #storedargs>0 then
+		Fluent                  = storedargs[0]
+		module_name_or_place_id = storedargs[1]
 	end
 	local RunService = game:GetService("RunService")
 	local HttpService = game:GetService("HttpService")
@@ -74,7 +74,7 @@ return function(Fluent,module_name_or_place_id)
 				Duration = 8
 			})
 		elseif IsServer then
-			print("[Ruby Module Loader][Server Mode]",out)
+			print("[Ruby Module Loader][Server Mode]",...)
 		else
 			Fluent:Notify({
 				Title = "Ruby Module Loader",
