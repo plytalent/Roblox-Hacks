@@ -9,7 +9,7 @@ return function(Url)
     local OnClose_Ev       = Instance.new("BindableEvent")
     local OnMessage_Ev     = Instance.new("BindableEvent")
     local LoopEv           = nil
-    local ws               = nil
+    local ws               = connect(target_url)
     events["OnMessage"]    = events_Ev.event
     events["OnClose"]      = events_Ev.event
     function connect(url)
@@ -49,7 +49,5 @@ return function(Url)
                 OnMessage_Connection = ws.OnMessage:Connect(OnMessage_Handler)
             end
         end
-    end)
-    ws = connect(target_url)
     return events
 end
